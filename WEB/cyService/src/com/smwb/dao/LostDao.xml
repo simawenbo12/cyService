@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smwb.dao.LostDao">
+	<resultMap type="Lost" id="lostResultMap">
+		<result column="l_id" property="lid"/>
+		<result column="title" property="title"/>
+		<result column="content" property="content"/>
+		<result column="name" property="name"/>
+		<result column="telephone" property="telephone"/>
+		<result column="img" property="img"/>
+		<result column="uptime" property="uptime"/>
+		<result column="state" property="state"/>
+		<result column="kinds" property="kinds"/>
+		<result column="u_id" property="uid"/>
+	</resultMap>
+	
+	<select id="findAll" parameterType="Lost" resultMap="lostResultMap">
+		select l_id,title,content,name,telephone,img,uptime,state,kinds,u_id
+		from lost
+		<where>
+			<if test="title!=null and title!=''">
+				title like "%"#{title}"%"
+			</if>
+			<if test="state!=null">
+			 	and state = #{state}
+			</if>
+			<if test="kinds!=null">
+				and kinds = #{kinds}
+			</if>
+			<if test="uid!=null">
+				and u_id = #{uid}
+			</if>
+		</where>
+		order by state asc,uptime desc
+	</select>
+	
+	<select id="findAll2" parameterType="Lost" resultMap="lostResultMap">
+		select l_id,title,content,name,telephone,img,uptime,state,kinds,u_id
+		from lost
+		order by state asc,uptime desc
+	</select>
+	
+	<select id="findById"	resultMap="lostResultMap">
+		select l_id,title,content,name,telephone,img,uptime,state,kinds,u_id
+		from lost
+		where l_id = #{lid} 
+	</select>
+	
+	<!-- app端 发布失物招领信息 -->
+	<insert id="addLost">
+		insert into lost
+		(title,content,name,telephone,img,uptime,state,kinds,u_id)
+		values
+		(#{title},#{content},#{name},#{telephone},#{img},#{uptime},#{state},#{kinds},#{uid})
+	</insert>
+	<!-- app端 修改失物招领信息 -->
+	<update id="update">
+		update lost
+		set title = #{title},
+			content = #{content},
+			name = #{name},
+			telephone = #{telephone},
+			img = #{img},
+			kinds = #{kinds}
+		where l_id = #{lid}
+	</update>
+	<!-- app端 修改已完成 -->
+	<update id="complete">
+		update lost
+		set state = #{state}
+		where l_id =#{lid}
+	</update>
+	<!-- app端 删除失物招领信息 -->
+	<delete id="delete"> 
+		delete from lost
+		where l_id = #{lid}
+	</delete>
+	
+</mapper>

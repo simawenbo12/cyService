@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<script src="../js/vue.js" ></script>
+		<style>
+			#top{
+				padding: 5px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">失物招领</h1>
+		</header>
+		<div class="mui-content">
+			<div style="padding: 10px;font-size: 20px;">
+				详情
+				<span class="" id="kindsBadge"></span>
+				<span class="mui-pull-right">&nbsp;</span>
+				<span class="" id="stateBadge"></span>
+			</div>
+			<ul class="mui-table-view"> 
+				<li class="mui-table-view-cell mui-ellipsis">
+					标题：&nbsp;<span id="titleSel"></span>
+				</li>
+				<li class="mui-table-view-cell">
+					发布时间：&nbsp;<span id="uptime"></span>
+				</li>
+				<li class="mui-table-view-cell">
+					发布人：&nbsp;<span id="name"></span>
+				</li>
+				<li class="mui-table-view-cell">
+					联系方式：&nbsp;<span id="telephone"></span>
+				</li>
+				<li class="mui-table-view-cell">
+					详情：&nbsp;<span id="content"></span>
+				</li>
+			</ul>
+			<div id="top">
+				<img src="" id="img"  style="width:100%;height:100%;" hidden />
+			</div>
+		</div>
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript">
+			mui.init();
+			var request_url = localStorage.getItem('request_url');
+			var mask = mui.createMask(); //遮罩层
+			window.addEventListener('lostDetailEvent',function(event){
+			 	var lid = event.detail.lid;
+			 	mui.ajax(request_url+'lost/app/findById',{
+					data:{
+						'lid':lid,
+					},
+					dataType:'json',
+					type:'post',
+					timeout:5000,
+					//正在加载维修单的时候，显示加载页面,加载完再关闭加载页面
+					beforeSend: function() {
+						plus.nativeUI.showWaiting('努力加载中......');
+						mask.show();
+					},
+					complete: function() {
+						plus.nativeUI.closeWaiting();						
+						mask.close(); //关闭遮罩层
+					},
+					success:function(data){
+						if(data.img!=null){
+							document.getElementById("img").src=request_url+data.img;
+							document.getElementById("img").style.display="block";
+						}else{
+							document.getElementById("img").src='';
+							document.getElementById("img").style.display="none";
+						} 
+						if(data.kinds==0){
+							document.getElementById("kindsBadge").innerHTML="失物";
+							document.getElementById("kindsBadge").className="mui-badge mui-badge-primary mui-pull-right";
+						}else{
+							document.getElementById("kindsBadge").innerHTML="招领";
+							document.getElementById("kindsBadge").className="mui-badge mui-badge-purple mui-pull-right";
+						}
+						if(data.state==0){
+							document.getElementById("stateBadge").innerHTML="进行中";
+							document.getElementById("stateBadge").className="mui-badge mui-badge-danger mui-pull-right";
+						}else{
+							document.getElementById("stateBadge").innerHTML="已完成";
+							document.getElementById("stateBadge").className="mui-badge mui-badge-success mui-pull-right";
+						}
+						document.getElementById("titleSel").innerHTML=data.title;
+						if(data.content!=null){
+							document.getElementById("content").innerHTML=data.content;
+						}
+						document.getElementById("uptime").innerHTML=data.uptime;
+						document.getElementById("name").innerHTML=data.name;
+						document.getElementById("telephone").innerHTML=data.telephone;
+						 
+					},
+					error: function(xhr, type, errorThrown) {
+						mui.toast('网络连接失败...');
+					}
+				});
+			})
+		</script>
+	</body>
+
+</html>

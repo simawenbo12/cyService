@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<script type="text/javascript" src="../js/jquery-1.11.0.min.js" ></script>
+		<style>
+			.mui-input-group:first-child {
+				margin-top: 20px;
+			}
+			.mui-content-padded {
+				margin-top: 25px;
+			}.forget{
+				padding: 20px;
+				height: 100%;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">密码重设</h1>
+		</header>
+		<div class="mui-content">
+			<form class="mui-input-group">
+				<div class="mui-input-row">
+					<label>密 码</label>
+					<input id='password' maxlength="15" type="password" class="mui-input-password" placeholder="重新设置您的密码">
+				</div>
+			</form>
+			<div class="mui-content-padded">
+				<button id='reg' class="mui-btn mui-btn-block mui-btn-primary" onclick="reloadUser();">确认</button>
+			</div>
+		</div>
+		<script src="../js/mui.min.js"></script>
+		<script>
+			mui.init();
+			var telephone
+			window.addEventListener('reloadDetailEvent',function(event){
+			 	telephone = event.detail.telephone; //接受前页面传来的手机号
+			})
+			function reloadUser(){
+				var request_url = localStorage.getItem('request_url');
+				var password = document.getElementById("password").value;
+				if(password==''){
+					mui.toast('密码不能空');
+					return;
+				}else if(!(/^[a-zA-Z0-9_@]{6,15}$/.test(password))){
+					mui.toast('密码只能包含大写、小写、数字、下划、@、且在6到15位之间');
+					return;
+				}
+				mui.ajax(request_url+'user/app/updatePwd',{
+					data:{
+						'telephone':telephone,
+						'password':password
+					},
+					dataType:'json',//服务器返回json格式数据
+					type:'post',//HTTP请求类型
+					timeout:5000,//超时时间设置为10秒；
+					success:function(){
+						mui.alert('密码修改成功,请重新登录',function(){
+							localStorage.removeItem("uidLogin");
+							localStorage.removeItem("identityLogin");
+							mui.openWindow({
+								url:'../login.html',
+								id:'login',
+							});
+						});
+					},
+					error:function(xhr,type,errorThrown){
+						mui.toast('网络连接失败...');
+					},
+				}); 	
+			}
+			
+		</script>
+	</body>
+
+</html>

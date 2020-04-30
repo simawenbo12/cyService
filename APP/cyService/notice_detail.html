@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<style>
+			#notice{
+				margin:10px 10px 0 10px;
+			}
+			img{
+				max-width: 100%;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+		    <a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+		    <h1 class="mui-title">通知栏</h1>
+		</header>
+		<div class="mui-content" id="notice">
+				<h3 class="mui-text-center" id="title"></h3>
+				<p class="mui-text-right" id="uptime"></p> 
+				<div id="content"> </div>
+		</div>		
+		
+		<script src="js/mui.min.js"></script>
+		<script type="text/javascript">
+			mui.init();
+			var request_url = localStorage.getItem("request_url");
+			var mask = mui.createMask(); //遮罩层
+			//监听传过来的数据
+			window.addEventListener('noticeDetailEvent',function(event){
+			 	var nid = event.detail.nid;
+				mui.plusReady(function(){
+					mui.ajax(request_url+'notice/findById',{
+						data:{
+							"nid":nid,
+						}, 
+						dataType:'json',
+						type:'post',
+						timeout:5000,
+						//正在加载通知的时候，显示加载页面,加载完再关闭加载页面
+						beforeSend: function() {
+							plus.nativeUI.showWaiting('努力加载中......');
+							mask.show();
+						},
+						complete: function() {
+							plus.nativeUI.closeWaiting();						
+							mask.close(); //关闭遮罩层
+						},
+						success: function(data) {
+							document.getElementById("title").innerHTML=data.title;
+							document.getElementById("uptime").innerHTML=data.uptime;
+							//修改ueditor回显的图片路径
+							var content = data.content.replace(new RegExp('/cyService/ueditor/jsp/upload/image','g'),request_url+'ueditor/jsp/upload/image');
+							document.getElementById("content").innerHTML=content;
+						},
+						error: function(xhr, type, errorThrown) {
+							mui.toast('网络连接失败...');
+						}
+					});
+				})
+			})
+		
+		</script>
+	</body>
+
+</html>

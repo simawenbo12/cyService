@@ -1,0 +1,268 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<style>
+			img{ 
+				height: 80px;
+				width:80px;
+				border-radius: 50%; 
+			}
+			#topCount{
+				background-image: url(imgs/count0.jpg);
+				padding-top:10px;
+				padding-bottom:10px;
+				text-align: center;
+			}
+			
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+		    <a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+		    <h1 class="mui-title">我的账户</h1>
+		</header>
+		<div class="mui-content"> 
+		    <div id="topCount"> 
+		    	<img src="imgs/userimg.png" id="userimg"/>
+		    </div>
+		    <div style="padding-top:10px;">
+		  		    <ul class="mui-table-view" style="color: deepskyblue;">
+						<li class="mui-table-view-cell" >
+							我的信息
+						</li>
+					</ul>
+		  		<ul class="mui-table-view">
+	  		       <li class="mui-table-view-cell">
+			        	<div class="mui-row">
+			        		<div class="mui-col-xs-4 text-gray">姓名</div>
+			        		<div class="mui-col-xs-8" id="name"></div>
+			        	</div>
+			        </li>
+			        <li class="mui-table-view-cell">
+			        	<div class="mui-row">
+			        		<div class="mui-col-xs-4 text-gray">身份</div>
+			        		<div class="mui-col-xs-8" id="identity"></div>
+			        	</div>
+			        </li>
+			        <li class="mui-table-view-cell">
+			        	<div class="mui-row">
+			        		<div class="mui-col-xs-4 text-gray">用户名</div>
+			        		<div class="mui-col-xs-8" id="username"></div>
+			        	</div>
+			        </li>
+			        <li class="mui-table-view-cell">
+			        	<div class="mui-row">
+			        		<div class="mui-col-xs-4 text-gray">手机号</div>
+			        		<div class="mui-col-xs-8" id="telephone"></div>
+			        	</div>
+			        </li>
+	  		    </ul>
+	  		    <div style="padding-top: 10px;">
+		  		    <ul class="mui-table-view" style="color: deepskyblue;">
+						<li class="mui-table-view-cell" >
+							<a class="mui-navigate-right" id="a_userimg">
+								更改头像
+							</a>
+						</li>
+					</ul>
+	  		    </div>
+	  		    <div style="padding-top: 10px;">
+		  		    <ul class="mui-table-view" style="color: deepskyblue;">
+						<li class="mui-table-view-cell" >
+							<a class="mui-navigate-right" id="a_pwd">
+								修改密码
+							</a>
+						</li>
+					</ul>
+	  		    </div>
+	  		    <div style="padding-top: 10px;">
+		  		    <ul class="mui-table-view" style="color: deepskyblue;">
+						<li class="mui-table-view-cell" >
+							<a class="mui-navigate-right" id="a_tel">
+								更换手机号
+							</a>
+						</li>
+					</ul>
+	  		    </div>
+	  		   
+	  		   
+		    </div>
+		</div>
+		<script src="js/mui.min.js"></script>
+		<script type="text/javascript">
+			mui.init();
+			var telephone;
+			var request_url= localStorage.getItem("request_url");
+			var uid = localStorage.getItem('uidLogin');
+			//上传头像
+			document.getElementById('a_userimg').addEventListener('tap',function(){
+                var m=this;  
+                plus.nativeUI.actionSheet({cancel:"取消",buttons:[  
+                    {title:"拍照"},  
+                    {title:"从相册中选择"}  
+                ]}, function(e){//1 是拍照  2 从相册中选择  
+                    switch(e.index){  
+                        case 1:appendByCamera();break;  
+                        case 2:appendByGallery();break;  
+                    }  
+                });  
+			});
+			 // 拍照添加文件
+            function appendByCamera(){
+                plus.camera.getCamera().captureImage(function(e){
+                    plus.io.resolveLocalFileSystemURL(e, function(entry) { 
+	                    var path = entry.toLocalURL(); 
+	                    plus.zip.compressImage({  
+		                    src: path,  
+		                    dst: "cameraZip/" + path,  
+		                    quality: 30,   
+			                overwrite: true  
+			            }, function(e) {  
+			                var wt=plus.nativeUI.showWaiting(); 
+			            	 //服务端接口路径
+	           				var server = request_url+"user/app/userimg";
+			                var task=plus.uploader.createUpload(server,
+			                    {method:"POST"},
+			                    function(t,status){ //上传完成
+			                        if(status==200){ 
+			                            mui.alert('上传成功',function(){
+											location.reload();
+										});
+			                            wt.close(); //关闭等待提示按钮
+			                        }else{
+			                            mui.alert('上传失败',function(){
+											location.reload();
+										});
+			                            wt.close();//关闭等待提示按钮
+			                        }
+			                    }
+			                );
+			                task.addData("uid",uid);
+			                task.addFile(e.target,{});
+			                task.start(); //提交报修
+			                //获得父页面的webview
+					        var list = plus.webview.currentWebview().opener();
+					　　　　 //触发父页面的自定义事件(refresh),从而进行刷新
+					        mui.fire(list, 'refresh');
+			            }, function(err) {  
+			                console.error("压缩失败：" + err.message);  
+			            });
+	                }, function(e) { 
+	                    mui.toast("读取拍照文件错误：" + e.message); 
+	                });
+                });    
+            }
+            // 从相册添加文件
+            function appendByGallery(){
+                plus.gallery.pick(function(path){
+                	plus.zip.compressImage({ 
+		                src: path,  
+		                dst: "galleryZip/"+path,
+		                quality: 30,   
+		                overwrite: true  
+		            }, function(e) {
+		            	var wt=plus.nativeUI.showWaiting(); 
+		            	 //服务端接口路径
+           				var server = request_url+"user/app/userimg";
+		                var task=plus.uploader.createUpload(server,
+		                    {method:"POST"},
+		                    function(t,status){ //上传完成
+		                        if(status==200){ 
+		                            mui.alert('上传成功',function(){
+										location.reload();
+									});
+		                            wt.close(); //关闭等待提示按钮
+		                        }else{
+		                            mui.alert('上传失败',function(){
+										location.reload();
+									});
+		                            wt.close();//关闭等待提示按钮
+		                        }
+		                    }
+		                );
+		                task.addData("uid",uid);
+		                task.addFile(e.target,{});
+		                task.start(); //提交报修
+		                //获得父页面的webview
+				        var list = plus.webview.currentWebview().opener();
+				　　　　 //触发父页面的自定义事件(refresh),从而进行刷新
+				        mui.fire(list, 'refresh');
+				        mui.toast("重启应用头像生效");
+		            }, function(err) {  
+		                console.error("压缩失败：" + err.message);  
+		            }); 
+                });
+            }
+			//修改密码
+			document.getElementById('a_pwd').addEventListener('tap',function(){
+				mui.openWindow({
+					url:'update/update_password.html',
+					id:'update_password',
+					extras:{
+						'telephone':telephone
+					}, 
+				});
+			});
+			document.getElementById("a_tel").addEventListener('tap',function(){
+				mui.openWindow({
+					url:'update/update_telephone.html',
+					id:'update/update_telephone',
+					extras:{
+						'telephone':telephone
+					},
+				});
+			})
+			mui.plusReady(function(){
+				//获取登录页面储存的url和登录信息
+				var request_url = localStorage.getItem("request_url");
+				var mask = mui.createMask();		
+				mui.ajax(request_url +'user/findById', {
+					data: {
+						'uid':uid,
+					},
+					dataType: 'json',
+					type: 'post',
+					timeout: 5000,
+					//正在加载维修单的时候，显示加载页面,加载完再关闭加载页面
+					beforeSend: function() { 
+						plus.nativeUI.showWaiting('努力加载中......');
+						mask.show();
+					},
+					complete: function() {
+						plus.nativeUI.closeWaiting();
+						mask.close(); //关闭遮罩层
+					},
+					success:function(data) {
+						document.getElementById("name").innerHTML=data.name;
+						if(data.identity==1){
+							document.getElementById("identity").innerHTML="普通用户";
+						}else if(data.identity==2){
+							document.getElementById("identity").innerHTML="维修员";
+						}
+						document.getElementById("username").innerHTML=data.username;
+						var tel = data.telephone;
+						var telXXXX =tel.substr(0,3)+"****"+tel.substr(7);
+						document.getElementById("telephone").innerHTML=telXXXX;
+						telephone = data.telephone;//为了修改密码和更换手机号时有手机号
+						if(data.img==null){
+							document.getElementById("userimg").src="imgs/userimg.png"
+						}else{
+							document.getElementById("userimg").src=request_url+data.img;
+						}
+					},
+					error: function(xhr, type, errorThrown) {
+						mui.toast('网络连接失败...');
+					}
+				});
+			});
+			
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smwb.dao.RepairDao">
+	
+	<resultMap type="RepairVo" id="repairVoResultMap">
+		<result column="r_id" property="rid"/>
+		<result column="title" property="title"/>
+		<result column="area_item" property="areaItem"/>
+		<result column="category_item" property="categoryItem"/>
+		<result column="uptime" property="uptime"/>
+		<result column="state" property="state"/>
+	</resultMap>
+	
+	<resultMap type="Repair" id="repairResultMap">
+		<result column="r_id" property="rid"/>
+		<result column="title" property="title"/>
+		<result column="content" property="content"/>
+		<result column="homestart" property="homestart"/>
+		<result column="a_id" property="aid"/>
+		<result column="address" property="address"/>
+		<result column="c_id" property="cid"/>
+		<result column="name" property="name"/>
+		<result column="telephone" property="telephone"/>
+		<result column="img" property="img"/>
+		<result column="uptime" property="uptime"/>
+		<result column="state" property="state"/>
+		<result column="u_id" property="uid"/>
+		<result column="m_id" property="mid"/>
+	</resultMap>
+	
+	<resultMap type="RepairAllVo" id="repairAllVoResultMap">
+		<result column="r_id" property="rid"/>
+		<result column="title" property="title"/>
+		<result column="content" property="content"/>
+		<result column="homestart" property="homestart"/>
+		<result column="area_item" property="areaItem"/>
+		<result column="category_item" property="categoryItem"/>
+		<result column="address" property="address"/>
+		<result column="name" property="name"/>
+		<result column="telephone" property="telephone"/>
+		<result column="img" property="img"/>
+		<result column="uptime" property="uptime"/>
+		<result column="state" property="state"/>
+		<result column="u_id" property="uid"/>
+		<result column="m_id" property="mid"/>
+	</resultMap>
+	
+	<resultMap type="RepairCountVo" id="repairCountVoResultMap">
+		<result column="state" property="state" />
+		<result  column="count" property="count" />
+	</resultMap>
+	
+	<resultMap type="AreaCountVo" id="AreaCountVoResultMap">
+		<result column="area_item" property="areaItem" />
+		<result  column="count" property="count" />
+	</resultMap>
+	
+	<resultMap type="CategoryCountVo" id="CategoryCountVoResultMap">
+		<result column="category_item" property="categoryItem" />
+		<result  column="count" property="count" />
+	</resultMap>
+	
+	<!-- 查询所有维修单 ， WEB端 &app端 -->
+	<select id="findAll" parameterType="RepairQueryVo" resultMap="repairVoResultMap">
+		select r.r_id,r.title,a.area_item,c.category_item,r.uptime,r.state
+		from repair r 
+		left join category c on r.c_id=c.c_id 
+		left join area a on r.a_id=a.a_id
+		<where>
+			<if test="titleVo!=null and titleVo!=''">
+				r.title like "%"#{titleVo}"%"
+			</if>
+			<if test="stateVo!=null">
+			 	and r.state = #{stateVo}
+			</if>
+			<if test="aidVo!=null">
+				and r.a_id = #{aidVo}
+			</if>
+			<if test="cidVo!=null">
+				and r.c_id = #{cidVo}
+			</if>
+			<if test="uptimeStartVo!=null">
+				and r.uptime &gt;=CONCAT(#{uptimeStartVo,jdbcType=DATE},' 00:00:00') 
+			</if>
+			<if test="uptimeEndVo!=null">
+				and r.uptime &lt;=CONCAT(#{uptimeEndVo,jdbcType=DATE},' 23:59:59') 
+			</if>
+		</where>
+		order by r.uptime desc
+	</select>
+	
+	<!-- app端 查询我的所有维修 -->
+	<select id="findAllByMy" resultMap="repairVoResultMap">
+		select r.r_id,r.title,a.area_item,c.category_item,r.uptime,r.state
+		from repair r 
+		left join category c on r.c_id=c.c_id 
+		left join area a on r.a_id=a.a_id
+		<where>
+				(r.u_id = #{uid} OR r.m_id = #{uid})
+			<if test="repairQueryVo.stateVo!=null">
+			 	and r.state = #{repairQueryVo.stateVo}
+			</if>
+			<if test="repairQueryVo.aidVo!=null">
+				and r.a_id = #{repairQueryVo.aidVo}
+			</if>
+			<if test="repairQueryVo.cidVo!=null">
+				and r.c_id = #{repairQueryVo.cidVo}
+			</if>
+		</where>
+		order by r.uptime desc
+	</select>
+	
+	<select id="findById" resultMap="repairResultMap">
+		select r_id,title,content,homestart,a_id,address,c_id,name,telephone,img,uptime,state
+		from repair
+		where r_id=#{rid}
+	</select>
+	
+	<update id="update" parameterType="Repair">
+		update repair
+		set title=#{title},
+			content=#{content},
+			homestart=#{homestart},
+			a_id=#{aid},
+			address=#{address},
+			c_id=#{cid},
+			name=#{name},
+			telephone=#{telephone},
+			uptime=#{uptime},
+			state=#{state}
+		where r_id=#{rid}
+	</update>
+	<!-- 后台修改维修单状态时 修改为未接单 要把维修人去掉 -->
+	<update id="setStateNull" parameterType="String">
+		update repair
+		set m_id=null
+		where r_id=#{rid}
+	</update>
+	
+	<delete id="delete">
+		delete from repair where r_id=#{rid}
+	</delete>
+	<!-- 指派维修员 -->
+	<update id="appoint">
+		update repair
+		set m_id=#{uid},
+			state=1
+		where r_id=#{rid} AND state=0
+	</update>
+	<!-- 根据维修单Id查找维修进度 -->
+	<select id="findProgressById" resultType="Progress">
+		select uptime,action
+		from progress
+		where r_id=#{rid}
+		order by uptime desc
+	</select>
+	<!-- 添加维修进度 -->
+	<insert id="addProgress" parameterType="Progress">
+		insert into progress
+		(uptime,action,r_id)
+		values
+		(#{uptime},#{action},#{rid})
+	</insert>
+	
+	<!-- Quartz定时任务 -->
+	<select id="findAutoComplete" resultMap="repairResultMap">
+		select r_id
+		from repair 
+	 	where state=1 AND uptime&lt;=DATE_SUB(NOW(),INTERVAL 48 HOUR)
+	</select>
+	<update id="autoComplete">
+		update repair
+		set state=2
+		where r_id=#{rid} AND state=1
+	</update>
+	
+	<!-- app查找某一个维修单详情 -->
+	<select id="appfindById" resultMap="repairAllVoResultMap">
+		select r.r_id,r.title,r.content,r.homestart,a.area_item,address,c.category_item,r.name,r.telephone,r.img,r.uptime,r.state,r.u_id,r.m_id
+		from repair r 
+		left join category c on r.c_id=c.c_id 
+		left join area a on r.a_id=a.a_id 
+		where r_id=#{rid}
+	</select>
+	<!-- app 报修-->
+	<insert id="addRepair" parameterType="Repair">
+		insert into repair
+		(r_id,title,content,homestart,a_id,address,c_id,name,telephone,img,uptime,state,u_id)
+		values
+		(#{rid},#{title},#{content},#{homestart},#{aid},#{address},#{cid},#{name},#{telephone},#{img},#{uptime},#{state},#{uid})
+	</insert>
+	
+	<update id="updateState">
+		update repair
+		set state=#{state}
+		where r_id=#{rid}
+	</update>
+	
+	<!-- 分组统计各个维修状态的数量 -->
+	<select id="findCount" resultMap="repairCountVoResultMap">
+		select state,count(state) as count from repair where u_id=#{uid} OR m_id=#{uid} GROUP BY state;
+	</select>
+	<!-- 分组统计各个维修分区的数量 -->
+	<select id="findAreaCount" resultMap="AreaCountVoResultMap">
+		select a.area_item,count(1) as count from repair r left join area a on r.a_id=a.a_id GROUP BY r.a_id;
+	</select>
+	<!-- 分组统计各个维修分类的数量 -->
+	<select id="findCategoryCount" resultMap="CategoryCountVoResultMap">
+		select c.category_item,count(1) as count from repair r left join category c on r.c_id=c.c_id GROUP BY r.c_id;
+	</select>
+	
+	<!-- 首页 所有项目的 总数   用户，维修， 失物招领， 二手市场 -->
+	<select id="findAllUserCount" resultType="Integer">
+		select count(1) from user where identity = 1
+	</select>
+	<select id="findAllRepairCount" resultType="Integer">
+		select count(1) from repair
+	</select>
+	<select id="findAllLostCount" resultType="Integer">
+		select count(1) from lost
+	</select>
+	<select id="findAllGoodsCount" resultType="Integer">
+		select count(1) from goods
+	</select>
+	
+</mapper>

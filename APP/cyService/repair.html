@@ -1,0 +1,224 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<script type="text/javascript" src="js/vue.js" ></script>
+		<script src="js/jquery-1.11.0.js" type="text/javascript" charset="utf-8"></script>
+		<style>
+			.mui-font-color{
+				color: royalblue;
+			}
+			select {
+				text-align: center;
+				text-align-last: center;
+				font-size: 15px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">城院维修</h1>
+			<a class="mui-icon mui-icon-plus mui-pull-right" id="a_up"></a>
+		</header>
+		<div class="mui-content"> 
+			<div class="mui-row">
+		        <div class="mui-col-sm-4 mui-col-xs-4" id="app1">
+		        	 <select id="areaSel" onchange="reloadFindAll()">
+		        	 	<option value="">--区域--</option>
+		        	 	<template v-for="r in rows">
+		        	 		<option :value="r.aid">{{r.areaItem}}</option>
+		        	 	</template>
+		        	 </select>
+		        </div>
+		        <div class="mui-col-sm-4 mui-col-xs-4" id="app2">
+		            <select id="categorySel" onchange="reloadFindAll()">
+		            	<option value="">--类别--</option>
+		        	 	<template v-for="r in rows">  
+		        	 		<option :value="r.cid">{{r.categoryItem}}</option>
+		        	 	</template>		        	 
+		            </select>
+		        </div>
+		         <div class="mui-col-sm-4 mui-col-xs-4">
+		            <select id="stateSel" onchange="reloadFindAll()">
+		            	<option value="">--进度--</option>
+		        	 	 	<option value="0" >未接受</option>
+  					      	<option value="1" >待完工</option>
+  					      	<option value="2" >已完工</option>
+  					    	<option value="3" >疑难</option>
+		        	 </select>
+		        </div>
+			</div>
+			
+			<div id="pullrefresh" class="mui-content mui-scroll-wrapper">
+				<div class="mui-scroll">
+					<div class="order_list">
+						<ul class="mui-table-view" id="list">
+							
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script src="js/mui.min.js"></script>
+		<script type="text/javascript">
+			
+			mui.init({
+				pullRefresh : {
+                    container:'#pullrefresh',//待刷新区域标识，querySelector能定位的css选择器均可，比如：id、.class等
+                    up : {
+                      height:50,//可选.默认50.触发上拉加载拖动距离
+                      auto:true,//可选,默认false.自动上拉加载一次
+                      contentrefresh : "正在加载...",//可选，正在加载状态时，上拉加载控件上显示的标题内容
+                      contentnomore:'没有更多数据了',//可选，请求完毕若没有更多数据时显示的提醒内容；
+                      callback :pullupRefresh //必选，刷新函数，根据具体业务来编写，比如通过ajax从服务器获取新数据；
+                    }
+                }
+			});
+			//获取数据
+			var currentPages = 1;   //当前页
+			var totalPages ;     //总页数
+			function getList(){
+				//获取服务器地址
+				var request_url = localStorage.getItem("request_url");
+				var mask = mui.createMask(); //遮罩层
+				// 上拉加载 显示维修信息
+				mui.ajax(request_url+'repair/app/findAll',{
+					data:{
+						'pageNum':currentPages,
+						'aidVo':document.getElementById("areaSel").value,
+						'cidVo':document.getElementById("categorySel").value, 
+						'stateVo':document.getElementById("stateSel").value,
+					},
+					dataType: 'json',
+					type: 'post',
+					timeout: 5000,
+					success: function(data) {
+						totalPages = data.pages;      //得到总页数
+						currentPages = data.pageNum;  //得到当前页数
+						var str = '';       //拼接字符串 用来打印数据
+						var strState = '';   //字符串中对于维修状态的判定
+						for(var i=0;i<data.list.length;i++){
+							if(data.list[i].state==0){
+								strState = 'mui-badge-warning">未接受'
+							}
+							if(data.list[i].state==1){
+								strState = 'mui-badge-primary">待完工'
+							}
+							if(data.list[i].state==2){
+								strState = 'mui-badge-success">已完工'
+							}
+							if(data.list[i].state==3){
+								strState = 'mui-badge-danger">疑难'
+							}
+							str =str+'<li class="mui-table-view-cell mui-media mui-ellipsis" id="'+data.list[i].rid+'">'
+									+	'<div class="mui-media-body mui-ellipsis">'
+									+		'<span class="mui-pull-right">'+data.list[i].rid+'</span>'
+									+		'<span class="mui-font-color mui-ellipsis">'+data.list[i].title+'</span>'
+									+	'</div>'
+									+	'<p>'+data.list[i].areaItem
+									+		'<span class="mui-pull-right mui-badge '+ strState +'</span>'
+									+	'</p>'
+									+'</li>';
+						}
+						$("#list").append(str);
+						currentPages++;    //计数器+1
+					},
+					error: function(xhr, type, errorThrown) {
+						mui.toast('网络连接失败...');
+					}
+				});
+			}
+			function pullupRefresh(){
+                setTimeout(function(){
+                    getList();
+                    mui('#pullrefresh').pullRefresh().endPullupToRefresh(currentPages>totalPages); //如果总页数小于当前页数则停止
+                },1500)
+            }
+			function reloadFindAll(){
+				currentPages = 1;   //当前页
+				$('#list').html(''); //清空前面动态添加的数据
+				//重新激活上拉加载
+		  		mui('#pullrefresh').pullRefresh().refresh(true);
+		  		pullupRefresh();
+
+			}
+			//填写维修单
+			document.getElementById('a_up').addEventListener('tap', function() {
+				mui.openWindow({
+					url: 'repair_up.html',
+					id: 'repair_up',
+				});
+			});
+			//查找 维修类别 和 维修区域
+			mui.plusReady(function() {
+				//获取服务器地址 创建遮罩层
+				var request_url = localStorage.getItem("request_url");
+				mui.ajax(request_url+'area/app/findAll', {
+					dataType: 'json',
+					type: 'post',
+					timeout: 5000,
+					success: function(data) {
+						new Vue({
+							el:'#app1',
+							data:{
+								rows:data
+							}
+						});
+						findAllCategory(); //查找所有分类
+					},
+					error: function(xhr, type, errorThrown) {
+						mui.toast('网络连接失败...');
+					}
+				});
+				//查找所有分类
+				function findAllCategory(){
+					mui.ajax(request_url+'category/app/findAll', {
+						dataType: 'json',
+						type: 'post',
+						timeout: 5000,
+						success: function(data) {
+							new Vue({
+								el:'#app2',
+								data:{
+									rows:data
+								}
+							});
+						},
+						error: function(xhr, type, errorThrown) {
+							mui.toast('网络连接失败...');
+						}
+					});
+				}
+				var identity = localStorage.getItem("identityLogin");
+				//点击某个维修单 进入该维修单的详情 
+				var prPage = mui.preload({
+					url: "repair_detail.html",
+					id: "repair_detail"
+				})
+				mui("#list").on('tap', 'li', function() {
+					if(identity==2){
+						var rid = this.getAttribute('id');
+						mui.fire(prPage, 'repairDetailEvent', {
+							'rid': rid,
+						});
+						mui.openWindow({
+							url: 'repair_detail.html',
+							id: 'repair_detail'
+						});
+					}else{
+						mui.toast("仅供我的报修页面及维修员查看详情");
+					}
+					
+				});
+			});
+			
+		</script>
+	</body>
+
+</html>

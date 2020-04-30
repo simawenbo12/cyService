@@ -1,0 +1,258 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="css/progress.css" />
+		<script type="text/javascript" src="js/jquery-1.11.0.js" ></script>
+		
+		<style>
+			li{
+				padding-left: 0px;
+				margin-left: 0px;
+			}
+			button{
+				margin-right:5px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+		    <a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+		    <h1 class="mui-title">报修详情</h1>
+		</header>
+		<div class="mui-content">
+			<div id="app">
+				<div style="padding: 10px;font-size: 20px;">
+					报修信息
+					<span class="mui-pull-right" id="rid"></span>
+				</div>
+				<ul class="mui-table-view">
+					<li class="mui-table-view-cell" id="state">
+						问题：&nbsp;<span id="title2"></span>
+					</li>
+					<li class="mui-table-view-cell">
+						详情：&nbsp;<span id="content"></span>
+					</li>
+					<li class="mui-table-view-cell">
+						地址：&nbsp;<span id="address"></span>
+					</li>
+					<li class="mui-table-view-cell">
+						类别：&nbsp;<span id="category"></span>
+					</li>
+					<li class="mui-table-view-cell">
+						何时有人：&nbsp;<span id="homestart"></span>
+					</li>
+					<li class="mui-table-view-cell">
+						报修人：&nbsp;<span id="name"></span>
+					</li>
+					<li class="mui-table-view-cell">
+						电话：&nbsp;<span id="telephone"></span>
+					</li>
+					<li class="mui-table-view-cell">
+						<button class="mui-btn-primary mui-pull-right" onclick="" id="btn">接受维修</button>
+						<button class="mui-btn-primary mui-pull-right" onclick="" id="btn2">确认完成</button>
+						<button class="mui-btn-danger mui-pull-right" onclick="" id="btn3">设为疑难</button>
+					</li>
+				</ul> 
+				<div style="padding: 10px;font-size: 20px;">
+					维修进度
+				</div>
+				<div style="background-color: white;width: 100%;height:auto;">
+					<div class="track-rcol"> 
+						<div class="track-list" id="app2">
+							<ul id="list">
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="top">
+				<img src="" id="img" style="width:100%;height:100%;" hidden />
+			</div>
+		</div>		
+		</script>
+		<script src="js/mui.min.js"></script>
+		<script type="text/javascript">
+			mui.init({
+				beforeback: function() {
+			　　　　 //获得父页面的webview
+			        var list = plus.webview.currentWebview().opener();
+			　　　　 //触发父页面的自定义事件(refresh),从而进行刷新
+			        mui.fire(list, 'refresh');
+			        //返回true,继续页面关闭逻辑
+			        return true;
+			    }
+			});
+			var request_url = localStorage.getItem('request_url');
+			var mask = mui.createMask(); //遮罩层
+			var uid = localStorage.getItem("uidLogin");
+			window.addEventListener('repairDetailEvent',function(event){
+			 	var rid = event.detail.rid;
+			 	//维修信息
+				mui.ajax(request_url+'repair/app/findById',{
+					data:{
+						'rid':rid,
+					},
+					dataType:'json',
+					type:'post',
+					timeout:10000,
+					//正在加载维修单的时候，显示加载页面,加载完再关闭加载页面
+					beforeSend: function() { 
+						plus.nativeUI.showWaiting('努力加载中......');
+						mask.show();
+					},
+					complete: function() {
+						plus.nativeUI.closeWaiting();
+						mask.close(); //关闭遮罩层
+					},
+					success:function(data) {
+						document.getElementById("rid").innerHTML="单号："+data.rid;
+						document.getElementById("title2").innerHTML=data.title;
+						document.getElementById("address").innerHTML=data.areaItem+" -- "+data.address;
+						document.getElementById("category").innerHTML=data.categoryItem;
+						if(data.homestart==0){
+							document.getElementById("homestart").innerHTML="8:00-12:00";
+						}else if(data.homestart==1){
+							document.getElementById("homestart").innerHTML="12:00-16:00";
+						}else if(data.homestart==2){
+							document.getElementById("homestart").innerHTML="16:00-20:00";
+						}
+						document.getElementById("name").innerHTML=data.name;
+						document.getElementById("telephone").innerHTML=data.telephone;
+						document.getElementById("content").innerHTML=data.content;
+						document.getElementById("btn").setAttribute("onclick","acept("+uid+","+data.rid+")");
+						document.getElementById("btn2").setAttribute("onclick","complete("+data.rid+")");
+						document.getElementById("btn3").setAttribute("onclick","stateno("+data.rid+")");
+						if(data.img!=null){
+							document.getElementById("img").src=request_url+data.img; 
+							document.getElementById("img").style.display="block";
+						}else{
+							document.getElementById("img").src='';
+							document.getElementById("img").style.display="none";
+						}
+						if(localStorage.getItem("identityLogin")==2&&data.state==0){
+							document.getElementById("btn").style.display="block";
+						}else{
+							document.getElementById("btn").style.display="none";
+						}
+						if(data.state==1&&(data.uid==uid||data.mid==uid)){
+							document.getElementById("btn2").style.display="block";
+							document.getElementById("btn3").style.display="block";
+						}else{
+							document.getElementById("btn2").style.display="none";
+							document.getElementById("btn3").style.display="none";
+						}
+						var str2 = '';
+						if(data.state==0){
+							str2 ='<span class="mui-badge mui-badge-warning">未接受</span>';
+						}else if(data.state==1){
+							str2 ='<span class="mui-badge mui-badge-primary">待完工</span>';
+						}else if(data.state==2){
+							str2 ='<span class="mui-badge mui-badge-success">已完工</span>';
+						}else if(data.state==3){
+							str2 ='<span class="mui-badge mui-badge-danger">疑难</span>';
+						}
+						$("#state").append(str2);
+					},
+					error: function(xhr, type, errorThrown) {
+						mui.toast('网络连接失败...');
+					}
+				});
+				//维修进度
+				mui.ajax(request_url+'repair/findProgressById',{
+					data:{
+						'rid':rid,
+					},
+					dataType:'json',
+					type:'post',
+					timeout:10000,
+					success: function(data){
+						$("#list").html(""); //重置
+						var str = ''; 
+						for(var i=0;i<data.length;i++){
+								str = str + '<li>'
+										  + 	'<i class="node-icon"><img src="imgs/progress-icon.png"/></i>'
+										  +		'<span class="time">'+data[i].uptime+'</span>'
+										  +		'<span class="txt">'+data[i].action+'</span>'
+										  + '</li>';
+						}
+						$("#list").append(str); //html是替换元素 append是在元素后面+
+						$("#list :first-child").addClass("first");
+					}, 
+				});
+			})
+			//确认完成
+			function complete(rid){
+				mui.ajax(request_url+'repair/app/updateState',{
+					data:{
+						'rid':rid,
+						'state':2,
+						'uid':uid
+					},
+					dataType:'json',
+					type:'post',	
+					timeout:5000,
+					success:function(data){
+						$("#btn2").hide();
+						$("#btn3").hide();
+						mui.toast("已确认完成");
+					},
+					error: function(xhr, type, errorThrown) {
+						mui.toast('网络连接失败...');
+					}
+				});
+			}
+			//确认完成
+			function stateno(rid){
+				mui.ajax(request_url+'repair/app/updateState',{
+					data:{
+						'rid':rid,
+						'state':3,
+						'uid':uid
+					},
+					dataType:'json',
+					type:'post',
+					timeout:5000,
+					success:function(data){
+						$("#btn3").hide();
+						mui.toast("已设为疑难");
+					},
+					error: function(xhr, type, errorThrown) {
+						mui.toast('网络连接失败...');
+					}
+				});
+			}
+			//接受维修
+			function acept(uid,rid){
+				//维修员接受维修
+				mui.ajax(request_url+'repair/app/accept',{
+					data:{
+						'uid':uid,
+						'rid':rid,
+					},
+					dataType:'json',
+					type:'post',
+					timeout:5000,
+					success:function(data){
+						$("#btn2").hide();
+						$("#btn").hide();
+						if(data){
+							mui.toast("已接受维修单");
+						}else{
+							mui.alert("接单失败，维修已被受理");
+						}
+					},
+					error: function(xhr, type, errorThrown) {
+						mui.toast('网络连接失败...');
+					}
+				});
+			}
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="css/myli.css" />
+		<script type="text/javascript" src="js/vue.js"></script>
+		<style>
+			.mui-content{
+				margin-top:-12px;
+			}
+			
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">通知栏</h1>
+		</header>
+		<div class="mui-content">
+			<!--vue v-for循环Notice  显示最新 循环3次-->
+			<ul class="mui-table-view" id="list">
+				<div id="app">
+					<template  v-for="r in rows">
+						<li class="mui-table-view-cell mui-media myli" :id="r.nid">
+							<img class="mui-pull-left" :src="r.img">
+							<div class="mui-media-body">
+								<span class="mui-ellipsis-2">{{r.title}}</span>
+								<p class="mui-pull-right">{{r.uptime}}</p>
+							</div> 
+						</li>
+					</template>
+				</div>
+			</ul>
+		</div> 
+
+		<script src="js/mui.min.js"></script>
+		<script type="text/javascript">
+			mui.init();
+			var request_url = localStorage.getItem("request_url");
+			var mask = mui.createMask(); //遮罩层
+			mui.plusReady(function() {
+				//请求服务器最新的通知
+				mui.ajax(request_url + 'notice/app/findAll', {
+					dataType: 'json',
+					type: 'post',
+					timeout: 5000,
+					//正在加载通知的时候，显示加载页面,加载完再关闭加载页面
+					beforeSend: function() {
+						plus.nativeUI.showWaiting('努力加载中......');
+						mask.show();
+					},
+					complete: function() {
+						plus.nativeUI.closeWaiting();
+						mask.close(); //关闭遮罩层
+					},
+					success: function(data) {
+						new Vue({
+							el: '#app',
+							data: {
+								rows: data
+							},
+							created:function(){
+								for(var i=0;i<data.length;i++){
+									if(data[i].img!=""){
+										data[i].img=request_url+data[i].img;
+									}else{ 
+										data[i].img="imgs/noimg.png";
+									}
+								} 
+							}
+						});
+					},
+					error: function(xhr, type, errorThrown) {
+						mui.toast('网络连接失败...');  
+					}
+				});
+				//点击某个维修单 进入该维修单的详情
+				var prPage = mui.preload({ 
+					url: "notice_detail.html",
+					id: "notice_detail"
+				});
+				mui("#list").on('tap', 'li', function() {
+					var nid = this.getAttribute('id');
+					mui.fire(prPage, 'noticeDetailEvent', {
+						'nid': nid,
+					});
+					mui.openWindow({
+						url: 'notice_detail.html',
+						id: 'notice_detail'
+					}); 
+				});
+				
+			});
+		</script>
+	</body>
+
+</html>

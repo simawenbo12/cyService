@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smwb.dao.GoodsDao">
+	<resultMap type="Goods" id="goodsResultMap">
+		<result column="g_id" property="gid"/>
+		<result column="title" property="title"/>
+		<result column="price" property="price"/>
+		<result column="name" property="name"/>
+		<result column="telephone" property="telephone"/>
+		<result column="img" property="img"/>
+		<result column="uptime" property="uptime"/>
+		<result column="state" property="state"/>
+		<result column="u_id" property="uid"/>
+	</resultMap>
+	
+	<select id="findAllGoods" parameterType="Goods" resultMap="goodsResultMap">
+		select g_id,title,price,content,name,telephone,img,uptime,state,u_id
+		from goods
+		<where>
+			<if test="title!=null and title!=''">
+				title like "%"#{title}"%"
+			</if>
+			<if test="state!=null">
+			 	and state = #{state}
+			</if>
+			<if test="uid!=null">
+				and u_id = #{uid}
+			</if>
+		</where>
+		order by state asc,uptime desc
+	</select>
+	
+	<select id="findAllGoods2" parameterType="Goods" resultMap="goodsResultMap">
+		select g_id,title,price,content,name,telephone,img,uptime,state,u_id
+		from goods
+		order by state asc,uptime desc
+	</select>
+	
+	<select id="findById"	resultMap="goodsResultMap">
+		select g_id,title,price,content,name,telephone,img,uptime,state,u_id
+		from goods
+		where g_id = #{gid} 
+	</select>
+	
+	<!-- app端web端 修改二手信息 -->
+	<update id="update">
+		update goods
+		set title = #{title},
+			price = #{price},
+			content = #{content},
+			name = #{name},
+			telephone = #{telephone},
+			img = #{img}
+		where g_id = #{gid}
+	</update>
+	
+	<!-- app端 查找所有二手市场信息 -->
+	<select id="findAll" parameterType="Goods" resultMap="goodsResultMap">
+		select g_id,title,price,content,name,telephone,img,uptime,state,u_id
+			from goods
+			<where>
+				<if test="title!=null and title!=''">
+					title like "%"#{title}"%"
+				</if>
+				<if test="state!=null">
+				 	and state = #{state}
+				</if>
+				<if test="uid!=null">
+					and u_id = #{uid}
+				</if>
+			</where>
+			order by state asc,
+				<if test="price==1">
+					price desc,
+				</if>
+				<if test="price==0">
+					price asc,
+				</if>
+			uptime desc
+	</select>
+	
+	<!-- app端 发布二手商品信息 -->
+	<insert id="addGoods" parameterType="Goods" >
+		insert into goods
+		(title,price,content,name,telephone,img,uptime,state,u_id)
+		values
+		(#{title},#{price},#{content},#{name},#{telephone},#{img},#{uptime},#{state},#{uid})
+	</insert>
+	
+	<!-- app端 修改已完成 -->
+	<update id="complete">
+		update goods
+		set state = #{state}
+		where g_id =#{gid}
+	</update>
+	
+	<!-- app端web端 删除二手信息 -->
+	<delete id="delete"> 
+		delete from goods
+		where g_id = #{gid}
+	</delete>
+</mapper>

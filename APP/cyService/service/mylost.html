@@ -1,0 +1,242 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/myli.css" />
+		<script type="text/javascript" src="../js/jquery-1.11.0.min.js" ></script>
+		<style>
+			.mui-font-color{
+				color: royalblue;
+			}
+			select {
+				text-align: center;
+				text-align-last: center;
+				font-size: 15px;
+			}
+			#searchForm{
+				margin:5px 5px -10px 5px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+		    <a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+		    <h1 class="mui-title">失物招领</h1>
+		    <a class="mui-icon mui-icon-plus mui-pull-right" id="a_up"></a>
+		</header>
+		<div class="mui-content">
+			<!-- MUI 搜索框 -->
+	        <div class="mui-input-row mui-search" id="searchForm">
+	            <input type="search" id="searchInput" class="mui-input-clear" onkeydown="reloadFindAll()" placeholder="搜索">
+	        </div>
+			<div class="mui-row">
+		        <div class="mui-col-sm-6 mui-col-xs-6" id="app1">
+		        	 <select id="kindsSel" onchange="reloadFindAll()">
+		        	 	<option value="">--类别--</option>
+		        	 	<option value="0" >失物</option>
+  					    <option value="1" >招领</option>
+		        	 </select>
+		        </div>
+		         <div class="mui-col-sm-6 mui-col-xs-6">
+		            <select id="stateSel" onchange="reloadFindAll()">
+		            	<option value="">--进度--</option>
+		        	 	<option value="0" >进行中</option>
+  					    <option value="1" >已完成</option>
+		        	 </select>
+		        </div>
+			</div>
+			<div id="pullrefresh" class="mui-content mui-scroll-wrapper">
+				<div class="mui-scroll">
+					<div class="order_list">
+						<ul class="mui-table-view" id="list">
+							<!--循环打印-->
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript">
+			mui.init({
+				pullRefresh : {
+                    container:'#pullrefresh',//待刷新区域标识，querySelector能定位的css选择器均可，比如：id、.class等
+                    up : {
+                      height:50,//可选.默认50.触发上拉加载拖动距离
+                      auto:true,//可选,默认false.自动上拉加载一次
+                      contentrefresh : "正在加载...",//可选，正在加载状态时，上拉加载控件上显示的标题内容
+                      contentnomore:'没有更多数据了',//可选，请求完毕若没有更多数据时显示的提醒内容；
+                      callback :pullupRefresh //必选，刷新函数，根据具体业务来编写，比如通过ajax从服务器获取新数据；
+                    }
+                }
+			});
+			//服务器地址 遮罩层 
+			var request_url = localStorage.getItem("request_url");
+			var mask = mui.createMask();
+			var uid = localStorage.getItem("uidLogin");
+			//填写失物招领信息
+			document.getElementById('a_up').addEventListener('tap', function() {
+				mui.openWindow({ 
+					url: 'lost_up.html',
+					id: 'lost_up',
+				});
+			});
+			//修改完数据执行刷新
+			window.addEventListener('refresh', function(e){//执行刷新
+			    location.reload();
+			});
+			//获取数据
+			var currentPages = 1;   //当前页
+			var totalPages ;     //总页数
+			function getList(){
+				//获取服务器地址 和登录的uid
+ 				var request_url = localStorage.getItem("request_url");
+				var mask = mui.createMask(); //遮罩层
+				var uid = localStorage.getItem("uidLogin");
+				// 上拉加载 显示失物招领信息
+				mui.ajax(request_url+'lost/app/findAll',{
+					data:{
+						'pageNum':currentPages,
+						'kinds':document.getElementById("kindsSel").value,
+						'state':document.getElementById("stateSel").value,
+						'title':document.getElementById("searchInput").value,
+						'uid':uid,
+					},
+					dataType: 'json',
+					type: 'post',
+					timeout: 5000,
+					success: function(data) {
+						totalPages = data.pages;      //得到总页数
+						currentPages = data.pageNum;  //得到当前页数
+						var str = '';       //拼接字符串 用来打印数据
+						var img_src = '';       //拼接字符串 装图片路径
+						var kinds = '';     //拼接字符串 装不同类别显示不同css
+						var state = '';     //拼接字符串 装不同进度显示不同css
+						var isState = '';   //拼接字符串 完成、编辑按钮 
+						for(var i=0;i<data.list.length;i++){
+							//判断有没有图片
+							if(data.list[i].img!=null){
+								img_src=request_url+data.list[i].img;
+							}else{
+								img_src='../imgs/noimg.png';
+							}
+							if(data.list[i].kinds==0){
+								kinds = '<p class="mui-badge mui-badge-primary" style="bottom:7px;left:120px;width:37px;">失物</p>'
+							}else{
+								kinds = '<p class="mui-badge mui-badge-purple" style="bottom:7px;left:120px;width:37px;">招领</p>'
+							}
+							//若为state=0， 显示编辑和确认完成按钮
+							if(data.list[i].state==0){
+								state = '<p class="mui-badge mui-badge-danger" style="bottom:7px;left:160px;width:48px;">进行中</p>'
+								isState='<button type="button" onclick="Update('+data.list[i].lid+')" class="mui-btn mui-btn-warning">编辑</button>'
+										+'<button type="button" onClick="Complete('+data.list[i].lid+')" class="mui-btn mui-btn-primary">确认完成</button>'
+							}else{
+								state = '<p class="mui-badge mui-badge-success" style="bottom:7px;left:160px;width:48px;">已完成</p>'
+								isState='';
+							} 
+							str =str+'<li class="mui-table-view-cell mui-media myli" id="'+data.list[i].lid+'">'
+									+	'<img class="mui-pull-left" src="'+img_src+'" >'
+									+	'<div class="mui-media-body">'
+									+		'<span class="mui-ellipsis">'+data.list[i].title+'</span>'
+									+  		'<span class="mui-ellipsis-2 myspan">'+data.list[i].content+'</span>'
+									+		state
+									+		kinds
+									+		'<p class="mui-pull-right">'+data.list[i].uptime+'</p>'
+									+	'</div>'
+									+'</li>'
+									+'<div id="btnDiv">'
+									+	'<button type="button" onclick="Delete('+data.list[i].lid+')" class="mui-btn mui-btn-danger">删除</button>'+isState
+									+'</div>'
+						}
+						$("#list").append(str); //html是替换元素 append是在元素后面+
+						currentPages++;    //计数器+1
+					},
+					error: function(xhr, type, errorThrown) { 
+						mui.toast('网络连接失败...');
+					}
+				});
+			}
+			function pullupRefresh(){
+                setTimeout(function(){
+                    getList();
+                    mui('#pullrefresh').pullRefresh().endPullupToRefresh(currentPages>totalPages); //如果总页数小于当前页数则停止
+                },1500)
+            }
+			function reloadFindAll(){
+				currentPages = 1;   //当前页
+				$('#list').html(''); //清空前面动态添加的数据
+				//重新激活上拉加载
+		  		mui('#pullrefresh').pullRefresh().refresh(true);	
+		  		pullupRefresh();
+			}
+			mui.plusReady(function() {
+				//点击某个维修单 进入该维修单的详情 
+				var prPage = mui.preload({
+					url: "lost_detail.html",
+					id: "lost_detail"
+				})
+				mui("#list").on('tap', 'li', function() {
+					var lid = this.getAttribute('id');
+					mui.fire(prPage, 'lostDetailEvent', {
+						'lid': lid
+					});
+					mui.openWindow({
+						url: 'lost_detail.html',
+						id: 'lost_detail'
+					});
+				});
+			})
+			function Complete(lid){
+				//修改状态为已完成
+				mui.ajax(request_url+'lost/app/complete', {
+					data:{
+						'lid':lid,
+						'state':1
+					},
+					dataType: 'json',
+					type: 'post',
+					timeout: 5000,
+					success: function(){
+						mui.alert('已确认完成',function(){
+							location.reload();
+						});
+					}
+				});
+				
+				
+			}
+			function Update(lid){
+				mui.openWindow({
+					url: 'lost_update.html',
+					id: 'lost_update',
+					extras:{
+						'lid':lid
+					},
+				})
+			}
+			function Delete(lid){
+				mui.confirm('确认删除？','删除',['确定','取消'],function(e){
+					if(e.index==0){
+						mui.ajax(request_url+'lost/app/delete',{
+							data:{
+								'lid':lid,
+							},
+							dataType:'json',
+							type:'post',
+							timeout:5000,
+							success:function(data){
+								
+							}
+						});
+						location.reload();
+					}
+				});
+			}
+		</script>
+	</body>
+
+</html>

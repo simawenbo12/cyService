@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html class="ui-page-login">
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link href="../css/style.css" rel="stylesheet" />
+		<script type="text/javascript" src="../js/jquery-1.11.0.min.js" ></script>
+		<style>
+			.mui-input-group:first-child {
+				margin-top: 20px;
+			}
+			
+			.mui-content-padded {
+				margin-top: 25px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">注册</h1>
+		</header>
+		<div class="mui-content">
+			<form class="mui-input-group">
+				<div class="mui-input-row">
+					<label>账 号</label>
+					<input id='username' maxlength="15" type="text" class="mui-input-clear" placeholder="请使用自己的学号注册">
+				</div>
+				<div class="mui-input-row">
+					<label>密 码</label>
+					<input id='password' maxlength="15" type="password" class="mui-input-password" placeholder="请输入密码">
+				</div>
+				<div class="mui-input-row">
+					<label>姓 名</label>
+					<input id='name' maxlength="5" type="text" placeholder="请输入自己的姓名">
+				</div>
+				<div class="mui-input-row">
+					<label>手机号</label>
+					<input id='telephone' maxlength="11" type="text"  placeholder="请输入11位正确手机号">
+				</div>
+				<div class="mui-input-row">
+					<button type="button" class="mui-pull-right mui-btn mui-btn-primary" style="width:30%;" onclick="sendRegCode(this);">发送验证码</button>
+					<input id="loginCode" class="mui-pull-left" style="width:70%;text-align:center ;" maxlength="11" type="text"  placeholder="请输入6位短信验证码">
+				</div>
+			</form>
+			<div class="mui-content-padded">
+				<button id='reg' class="mui-btn mui-btn-block mui-btn-primary" onclick="regUser();">注册</button>
+			</div>
+		</div>
+		<script src="../js/mui.min.js"></script>
+		<script>
+			mui.init();
+			//发送验证码
+			var request_url = localStorage.getItem("request_url");
+			var mask = mui.createMask(); //遮罩层
+			//发送验证码
+			function sendRegCode(btn) {
+				var telephone =document.getElementById("telephone").value;
+				if(telephone==''){
+					mui.toast('手机号不能为空');
+					return false;
+				}else if(!(/^1[3|5|7|8][0-9]\d{4,8}$/.test(telephone))){
+					mui.toast('请输入正确的手机号');
+					return false;
+				}
+				$(btn).attr("disabled", true); //防重复提交 先禁用
+				//验证手机号是否存在
+				mui.ajax(request_url+'user/checkTelephone',{
+					data:{
+						'telephone':telephone
+					},
+					dataType:'json',
+					type:'post',
+					timeout:5000,
+					beforeSend: function() {
+						plus.nativeUI.showWaiting('努力加载中......');
+						mask.show();
+					},
+					complete: function() {
+						plus.nativeUI.closeWaiting();
+						mask.close(); //关闭遮罩层
+					},
+					success:function(data){
+						if(!data.valid){
+							mui.toast('手机号已存在');
+							$(btn).attr("disabled", false);
+						}else{
+							//发送验证码
+							mui.ajax(request_url+'user/app/sendCode',{
+								data:{
+									'telephone':telephone
+								},
+								dataType:'json',//服务器返回json格式数据
+								type:'post',//HTTP请求类型
+								timeout:5000,//超时时间设置为10秒；
+								success:function(data){
+									if (data) {
+										var time = 60;
+										timer = setInterval(function() {
+											if (time > 0) {
+												$(btn).attr("disabled", true);
+												$(btn).html('重新发送(' + time + ')');
+												time--;
+											} else {
+												$(btn).attr("disabled", false);
+												$(btn).html("重新发送");
+												clearInterval(timer); //停止计时器
+											}
+										}, 1000)	
+									}
+								},
+								error:function(xhr,type,errorThrown){
+									mui.toast('网络连接失败...');
+									$(btn).attr("disabled", false);
+								},
+							}); 
+						}
+					},
+					error:function(xhr,type,errorThrown){
+						mui.toast('网络连接失败...');
+						$(btn).attr("disabled", false);
+					}
+				});
+				
+			}
+			//账号注册
+			function regUser(){
+				var username = document.getElementById('username').value;
+				var password = document.getElementById("password").value;
+				var name = document.getElementById("name").value;
+				var telephone = document.getElementById("telephone").value;
+				var loginCode = document.getElementById("loginCode").value;
+				if(username==''||password==''){
+					mui.toast("账号及密码不能为空");
+					return;
+				}else if(name =='') {
+					mui.toast("姓名不能为空");
+					return;
+				}else if(!(/^[a-zA-Z0-9_@]{6,15}$/.test(username))){
+					mui.toast('用户名只能包含大写、小写、数字、下划、@、且在6到15位之间');
+					return;
+				}else if(!(/^[a-zA-Z0-9_@]{6,15}$/.test(password))){
+					mui.toast('密码只能包含大写、小写、数字、下划、@、且在6到15位之间');
+					return;
+				}else if(telephone ==''){
+					mui.toast('手机号不能为空');
+					return;
+				}else if(!(/^[1][3,4,5,7,8][0-9]{9}$/.test(telephone))){
+					mui.toast('请输入正确的手机号');
+					return;
+				}else if(loginCode==''){
+					mui.toast('请输入短信验证码');
+					return;
+				}
+				$('#reg').attr("disabled", true); //防重复提交 先禁用
+				//验证用户名是否存在
+				mui.ajax(request_url+'user/checkUsername',{
+					data:{ 
+						'username':username
+					},
+					dataType:'json',
+					type:'post',
+					timeout:5000,
+					beforeSend: function() {
+						plus.nativeUI.showWaiting('努力加载中......');
+						mask.show();
+					},
+					complete: function() {
+						plus.nativeUI.closeWaiting();
+						mask.close(); //关闭遮罩层
+					},
+					success:function(data){
+						if(!data.valid){
+							mui.toast('账号已存在');
+							$('#reg').attr("disabled", false);
+							return;
+						}else{
+							//账号可用 注册
+							mui.ajax(request_url+'user/app/regUser',{
+								data:{
+									'username':username,
+									'password':password,
+									'name':name,
+									'telephone':telephone,
+									'loginCode':loginCode
+								},
+								dataType:'json',//服务器返回json格式数据
+								type:'post',//HTTP请求类型
+								timeout:5000,//超时时间设置为10秒；
+								success:function(data){
+									$('#reg').attr("disabled", false);
+									if(data.valid=='true'){
+										mui.alert('注册成功',function(){
+											mui.openWindow({
+												url:'../login.html',
+												id:'login',
+											});
+										});
+									}else{
+										mui.toast(data.valid);
+									}
+								},
+								error:function(xhr,type,errorThrown){
+									mui.toast('网络连接失败...');
+									$('#reg').attr("disabled", false);
+								},
+							});
+						}
+					},
+					error:function(xhr,type,errorThrown){
+						mui.toast('网络连接失败...');
+						$('#reg').attr("disabled", false);
+					},
+				});
+				
+			}
+		</script>
+	</body>
+
+</html>

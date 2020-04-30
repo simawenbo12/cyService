@@ -1,0 +1,156 @@
+{
+  "login.html": {
+    "refer": [
+      "index.html",
+      "forget_password.html",
+      "reg.html",
+      "update/forget_password.html",
+      "update/reg.html"
+    ],
+    "resources": [
+      "css/mui.min.css",
+      "js/mui.min.js"
+    ]
+  },
+  "index.html": {
+    "resources": [
+      "setting.html",
+      "myCount.html",
+      "main.html"
+    ],
+    "refer": [
+      "setting.html",
+      "myCount.html",
+      "main.html",
+      "login.html"
+    ]
+  },
+  "setting.html": {
+    "refer": [
+      "myMessage.html",
+      "update.html",
+      "advice.html",
+      "login.html"
+    ]
+  },
+  "main.html": {
+    "resources": [
+      "imgs/lý\u001fý 2.png",
+      "imgs/lJ.png",
+      "imgs/ýý.png"
+    ],
+    "refer": [
+      "notice.html",
+      "repair.html",
+      "repair_detail.html",
+      "notice_detail.html",
+      "repair_up.html",
+      "service/lost_find.html",
+      "service/goods.html"
+    ]
+  },
+  "myCount.html": {
+    "refer": [
+      "myCountMessage.html",
+      "myRepair.html",
+      "service/mylost.html",
+      "service/mygoods.html"
+    ]
+  },
+  "repair.html": {
+    "refer": [
+      "repair_detail.html",
+      "repair_up.html"
+    ]
+  },
+  "myRepair.html": {
+    "refer": [
+      "repair_detail.html",
+      "repair_up.html"
+    ]
+  },
+  "repair_up.html": {
+    "refer": [
+      "repair_detail.html"
+    ]
+  },
+  "forget_password.html": {
+    "refer": [
+      "login.html",
+      "reloadCount.html",
+      "repair_detail.html"
+    ]
+  },
+  "reloadCount.html": {
+    "refer": [
+      "login.html",
+      "reloadCount.html"
+    ]
+  },
+  "myCountMessage.html": {
+    "refer": [
+      "notice.html",
+      "update_password.html",
+      "update/update_telephone.html",
+      "update/update_password.html"
+    ]
+  },
+  "update_password.html": {
+    "refer": [
+      "reloadCount.html"
+    ]
+  },
+  "update/update_password.html": {
+    "refer": [
+      "login.html"
+    ]
+  },
+  "update/update_telephone.html": {
+    "refer": [
+      "update/reloadTelephone.html"
+    ]
+  },
+  "update/reloadTelephone.html": {
+    "refer": [
+      "login.html"
+    ]
+  },
+  "update/forget_password.html": {
+    "refer": [
+      "update/reloadCount.html"
+    ]
+  },
+  "service/lost_find.html": {
+    "refer": [
+      "service/lost_detail.html",
+      "service/lost_up.html"
+    ]
+  },
+  "service/mylost.html": {
+    "refer": [
+      "service/lost_detail.html",
+      "service/lost_update.html",
+      "service/lost_up.html"
+    ]
+  },
+  "repair_detail.html": {
+    "resources": [
+      "imgs/progress-icon.png"
+    ]
+  },
+  "service/goods.html": {
+    "refer": [
+      "service/lost_detail.html",
+      "service/goods_up.html",
+      "service/goods_detail.html"
+    ]
+  },
+  "service/mygoods.html": {
+    "refer": [
+      "service/lost_detail.html",
+      "service/goods_detail.html",
+      "service/goods_update.html",
+      "service/goods_up.html"
+    ]
+  }
+}

@@ -1,0 +1,58 @@
+@charset "UTF-8";
+ul li {
+			list-style: none;
+		}
+		.track-rcol {
+			width: 100%;
+			border: 1px solid #eee;
+		}
+		
+		.track-list {
+			margin: 20px 20px 20px 0;
+			position: relative;
+		}
+		
+		.track-list li {
+			position: relative;
+			padding: 9px 0 0 25px;
+			line-height: 18px;
+			border-left: 1px solid #d9d9d9; 
+			color: #999;
+		}
+		
+		.track-list li.first {
+			color: 	#3366FF;
+		}
+		
+		.track-list li .node-icon {
+			position: absolute;
+			left: -4px;
+			top: 50%;
+			width: 11px;
+			height: 11px;
+			background: url(../images/progress-icon.png) -21px -72px no-repeat;
+		}
+		
+		
+		.track-list li .time {
+			margin-right: 20px;
+			position: relative;
+			top: 4px;
+			display: inline-block;
+			vertical-align: middle;
+		}
+		
+		.track-list li .txt {
+			position: relative;
+			top: 4px;
+			display: inline-block;
+			vertical-align: middle;
+		}
+		
+		.track-list li.first .time {
+			margin-right: 20px;
+		}
+		
+		.track-list li.first .txt {
+			max-width: 600px;
+		}

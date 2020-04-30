@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smwb.dao.NoticeDao">
+	<resultMap type="Notice" id="noticeResultMap">
+		<result column="n_id" property="nid"/>
+		<result column="title" property="title"/>
+		<result column="content" property="content"/>
+		<result column="uptime" property="uptime"/>
+		<result column="img" property="img"/>
+	</resultMap>
+	
+	<select id="findAll" resultMap="noticeResultMap">
+		select n_id,title,content,uptime,img 
+		from notice
+		order by uptime desc
+	</select>
+	
+	<insert id="add" parameterType="Notice">
+		insert into notice
+		(title,content,uptime,img)
+		values
+		(#{title},#{content},#{uptime},#{img})
+	</insert>
+	
+	<update id="update" parameterType="Notice">
+		update notice
+		set title=#{title},
+			content=#{content},
+			img=#{img}
+		where n_id=#{nid}
+	</update>
+	
+	<select id="findById" resultMap="noticeResultMap">
+		select n_id,title,content,uptime,img
+		from notice
+		where n_id=#{nid}
+	</select>
+	
+	<delete id="delete">
+		delete from notice
+		where n_id=#{nid}
+	</delete>
+	
+</mapper>

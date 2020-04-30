@@ -1,0 +1,225 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="../css/upload.css" />
+		<script type="text/javascript" src="../js/jquery-1.11.0.min.js" ></script>
+		<script type="text/javascript" src="../js/vue.js"></script>
+	</head>
+	<body>
+		<header class="mui-bar mui-bar-nav">
+		    <a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+		    <h1 class="mui-title">修改失物招领信息</h1>
+		</header>
+		<div class="mui-content" id="contentbody">
+		    <form  class="mui-input-group" method="post" enctype="multipart/form-data">
+		    	<ul class="mui-table-view" style="color: deepskyblue;">
+					<li class="mui-table-view-cell" >
+						请按要求修改信息
+					</li>
+				</ul>
+				<input type="text" id="lid" hidden>
+	    	    <div class="mui-input-row">
+	    	        <label>标题</label>
+	    	        <input type="text" name="title" id="title" placeholder="请简要说明问题" maxlength="15" />
+	    	    </div>
+	    	    <div class="mui-input-row" id="app2">
+	    	        <label>类别</label>
+	    	        <select id="kinds" name="kinds">
+		            	<option value="">-- 失物  / 招领  --</option>
+		        	 	<option value="0">失物</option>
+		        	 	<option value="1">招领</option>
+		            </select>
+	    	    </div>
+	    	    <div class="mui-input-row">
+	    	        <label>联系人</label>
+	    	        <input type="text" name="name" id="name" placeholder="请输入联系人" maxlength="5"/>
+	    	    </div>
+	    	    <div class="mui-input-row">
+	    	        <label>联系方式</label>
+	    	        <input type="text" name="telephone" id="telephone" placeholder="请输入联系方式" maxlength="20"/>
+	    	    </div>
+	    	    <div class="mui-input-row">
+                    <label>详情</label>
+                    <input type="text" name="content" id="content" placeholder="问题详情（选填）" maxlength="100"> 
+                </div>
+	      </form> 
+	      	<!--上传图片 的按钮一定要在form标签外才有效-->
+	      	<div style="padding: 5px;background-color: white;">
+				<button class="mui-btn mui-pull-right" id="imageup">上传图片</button><br />
+				<img id="headimg" src=''  height="100%" width="100%" style="display:none;"><br />
+			</div> 
+			<div class="mui-text-center" style="padding:7px;">
+		    	<button id="btn" type="button" onclick="upload();">提交</button>
+		   </div> 
+		</div> 
+		
+		<script src="../js/mui.min.js"></script>
+		<script>
+			mui.init(); 
+			// 弹出系统选择按钮框
+			document.getElementById('imageup').addEventListener('tap',function(){
+				page.imgUp();
+			});
+			//获取服务器地址 创建遮罩层
+			var request_url = localStorage.getItem("request_url");
+			var mask = mui.createMask(); //遮罩层
+			mui.plusReady(function(){
+				var lid = plus.webview.currentWebview().lid;
+				mui.ajax(request_url+'lost/app/findById',{
+					data:{
+						'lid':lid,
+					},
+					dataType:'json',
+					type:'post',
+					timeout:5000,
+					//正在加载维修单的时候，显示加载页面,加载完再关闭加载页面
+					beforeSend: function() {
+						plus.nativeUI.showWaiting('努力加载中......');
+						mask.show();
+					},
+					complete: function() {
+						plus.nativeUI.closeWaiting();						
+						mask.close(); //关闭遮罩层
+					},
+					success:function(data){
+						document.getElementById("lid").value=lid;
+						document.getElementById("title").value=data.title;
+						document.getElementById("kinds").value=data.kinds;
+						document.getElementById("name").value=data.name;
+						document.getElementById("telephone").value=data.telephone;
+						document.getElementById("content").value=data.content;
+						if(data.img!=null){
+							document.getElementById("headimg").src=request_url+data.img;
+							document.getElementById("headimg").style.display="block";
+						}else{
+							document.getElementById("headimg").src='';
+							document.getElementById("headimg").style.display="none";
+						}
+					},
+					error: function(xhr, type, errorThrown) {
+						mui.toast('网络连接失败...');
+					}
+				});
+			})
+			var page=null;
+            page={  
+                imgUp:function(){
+                    var m=this;  
+                    plus.nativeUI.actionSheet({cancel:"取消",buttons:[  
+                        {title:"拍照"},  
+                        {title:"从相册中选择"}  
+                    ]}, function(e){//1 是拍照  2 从相册中选择  
+                        switch(e.index){  
+                            case 1:appendByCamera();break; 
+                            case 2:appendByGallery();break;  
+                        }  
+                    });  
+                }  
+                //摄像头  
+            }  
+            // 拍照添加文件
+            function appendByCamera(){
+                plus.camera.getCamera().captureImage(function(e){
+                    plus.io.resolveLocalFileSystemURL(e, function(entry) { 
+	                    var path = entry.toLocalURL();
+	                    //去掉路径接取文件名  并修改文件名为ImgZip,避免文件名是中文导致乱码无法上传，仅适用于单图上传
+                		var name = "imgZip"+path.substr(e.lastIndexOf('.'));
+	                    plus.zip.compressImage({  
+		                    src: path,  
+		                    dst: "cameraZip/"+name,  
+		                    quality: 50,   
+			                overwrite: true  
+			            }, function(e) {
+			                document.getElementById("headimg").src ="cameraZip/"+name;
+			                $("#headimg").show();
+			                $("#imageup").html("重新上传")
+			            }, function(err) {  
+			                console.error("压缩失败：" + err.message);  
+			            });
+	                }, function(e) { 
+	                    mui.toast("读取拍照文件错误：" + e.message); 
+	                });
+                });    
+            }
+            // 从相册添加文件
+            function appendByGallery(){
+                plus.gallery.pick(function(e){
+                	plus.io.resolveLocalFileSystemURL(e, function(entry) {
+                		var path = entry.toLocalURL();
+                		//去掉路径接取文件名  并修改文件名为ImgZip,避免文件名是中文导致乱码无法上传，仅适用于单图上传
+                		var name = "imgZip"+path.substr(e.lastIndexOf('.'));
+	                	plus.zip.compressImage({ 
+			                src: path,  
+			                dst: "galleryZip/"+name,
+			                quality: 50,   
+			                overwrite: true  
+			            }, function(e) {  
+			                document.getElementById("headimg").src ="galleryZip/"+name;
+			                $("#headimg").show();
+			                $("#imageup").html("重新上传")
+			            }, function(err) {  
+			                console.error("压缩失败：" + err.message);  
+			            }); 
+			        },function(e){
+			        	console.log("读取相册文件错误：" + e.message);
+			        });
+                });
+            }
+            //服务端接口路径
+            var server = request_url+"lost/app/update";
+            //获取图片元素
+            var files = document.getElementById('headimg');
+            // 上传文件
+            function upload(){
+            	//表单验证
+            	var lid = document.getElementById("lid").value;
+				var title = document.getElementById("title").value;
+				var kinds = document.getElementById("kinds").value;
+				var name = document.getElementById("name").value;
+				var telephone = document.getElementById("telephone").value;
+				var content = document.getElementById("content").value;
+				var uid = localStorage.getItem("uidLogin");
+                if(title==''){
+					mui.toast('标题不能为空');
+					return false;
+				}else if(kinds==''){
+					mui.toast('类别不能为空');
+					return false;
+				}else if(telephone==''||name==''){
+					mui.toast('联系人及联系方式不能为空');
+					return false;
+				}
+                var wt=plus.nativeUI.showWaiting(); 
+                var task=plus.uploader.createUpload(server,
+                    {method:"POST"},
+                    function(t,status){ //上传完成
+                        mui.alert('修改成功',function(){
+							//获得父页面的webview
+					        var list = plus.webview.currentWebview().opener();
+					　　　　  //触发父页面的自定义事件(refresh),从而进行刷新
+					        mui.fire(list, 'refresh');
+						});
+                        wt.close();//关闭等待提示按钮
+                    } 
+                );
+                //添加其他参数  addData方法只能发送字符串
+                task.addData("lid",lid);
+                task.addData("title",title); 
+                task.addData("kinds",kinds); 
+                task.addData("name",name);
+                task.addData("telephone",telephone);
+                task.addData("content",content);
+                if(files.src.substring(files.src.length-4)!='html'){ //截取字符串最后4位 最后四位不等于html
+                	task.addFile(files.src,{});
+                }
+                task.start(); //提交报修
+            } 
+		</script>
+	</body>
+</html>
+ 

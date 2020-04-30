@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smwb.dao.CategoryDao">
+	
+	
+	<resultMap type="Category" id="CategoryResultMap">
+		<result column="c_id" property="cid"/>
+		<result column="category_item" property="categoryItem"/>
+	</resultMap>
+
+    <select id="findAll" resultMap="CategoryResultMap">
+        select c_id,category_item
+        from category
+    </select>
+	
+	<insert id="add">
+		insert into category
+		(category_item)
+		values
+		(#{categoryItem})
+	</insert>
+	
+	<select id="findById"  resultMap="CategoryResultMap">
+		select c_id,category_item
+		from category
+		where c_id=#{cid}
+	</select>
+	
+	
+	<update id="update">
+        update category
+        set category_item=#{categoryItem}
+        where c_id=#{cid}
+    </update>
+	
+	<delete id="deleteById">
+		delete from category
+		where c_id=#{cid}
+	</delete>
+	
+</mapper>

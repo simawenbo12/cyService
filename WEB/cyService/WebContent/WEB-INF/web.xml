@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xmlns="http://java.sun.com/xml/ns/javaee" 
+xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" version="3.0">
+  <display-name>cyService</display-name>
+  <welcome-file-list>
+    <welcome-file>index.html</welcome-file>
+    <welcome-file>index.htm</welcome-file>
+    <welcome-file>index.jsp</welcome-file>
+    <welcome-file>default.html</welcome-file>
+    <welcome-file>default.htm</welcome-file>
+    <welcome-file>default.jsp</welcome-file>
+  </welcome-file-list>
+		
+		
+		<!-- 配置加载spring-->
+		<context-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>classpath:applicationContext.xml,classpath:applicationContext-quartz.xml</param-value>
+		</context-param>
+		<!-- 配置监听器加载spring -->
+		<listener>
+			<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+		</listener>
+		<!-- 配置过滤器，解决post的乱码问题 -->
+		<filter>
+			<filter-name>encoding</filter-name>
+			<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+			<init-param>
+				<param-name>encoding</param-name>
+				<param-value>UTF-8</param-value>
+			</init-param>
+		</filter>
+		<filter-mapping>
+			<filter-name>encoding</filter-name>
+			<url-pattern>/*</url-pattern>
+		</filter-mapping>
+		<!-- 配置SpringMVC -->
+		<servlet>
+			<servlet-name>springmvc</servlet-name>
+			<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+			<init-param>
+				<param-name>contextConfigLocation</param-name>
+				<param-value>classpath:springmvc.xml</param-value>
+			</init-param>
+			<!-- 配置springmvc什么时候启动，参数必须为整数 -->
+			<!-- 如果为0或大于0，则springMVC随着容器启动而启动 -->
+			<!-- 如果小于0，则在第一次请求进来的时候启动 -->
+			<load-on-startup>1</load-on-startup>
+		</servlet>
+		<servlet-mapping>
+			<servlet-name>springmvc</servlet-name>
+			<!-- 所有的请求都进入springMVC -->
+			<!-- 1. /* 拦截所有 jsp js png .css 
+				 2. *.action *.do 拦截以do action结尾的请求 
+				3. / 拦截所有 （不包括jsp) (包含.js .png.css) 
+				/对静态资源放行 -->
+			<url-pattern>/</url-pattern>
+		</servlet-mapping>
+ 
+		  <!-- 替换404页面 start -->
+		  <error-page>
+		    <error-code>404</error-code>
+		    <location>/WEB-INF/jsp/404.jsp</location>
+		  </error-page>
+		  <!-- end -->
+		  <!-- 替换500页面 start -->
+		  <error-page>
+		    <error-code>500</error-code>
+		    <location>/WEB-INF/jsp/404.jsp</location>
+		  </error-page>
+		  <!-- end -->
+		
+	</web-app>

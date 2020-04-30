@@ -1,0 +1,217 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<style>
+			.mymui{
+				height:100px;
+				margin:20px 20px 0px 50px;
+			}
+			.myuser img{
+				margin-top: 10px;
+				width: 80px;
+				height:80px;
+				border-radius: 50%;
+			}
+			.myuser span{
+				font-weight:bold;
+				font-size:20px;
+			}
+			#list2 img{
+				height: 30px;
+			}
+			#list1 img{
+				height: 40px;
+			}
+			.mui-count{
+				position: absolute;
+				margin-bottom:100px;
+				padding: 20px 20px 20px 50px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="mui-content">
+			<div style="background-image: url(imgs/count0.jpg);background-size: cover; margin-top:-15px;">
+				<div class="mymui">
+					<div class="myuser">
+						<img src="imgs/userimg.png" id="userimg" />
+						<span class="mui-count mui-text-center" id="whatName">
+							<span id="showName"></span>
+					 		<p><br /><span id="showIdentiy"></span></p>
+						</span>
+					</div>
+				</div>
+			</div>
+			<div style="color: deepskyblue;padding-top:10px;">
+				<ul class="mui-table-view">
+					<li class="mui-table-view-cell">
+						<span class="mui-icon mui-icon-person"></span>我的账户
+					</li>
+				</ul>
+			</div>
+			<ul class="mui-table-view mui-grid-view mui-grid-9" id="list1">
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-4">
+				    <a id="a_mycount">
+				        <span class="mui-icon"><img src="imgs/count00.png"/></span>
+				        <div class="mui-media-body">账号管理</div>
+				    </a>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-4">
+				    <a id="a_mylost">
+				        <span class="mui-icon"><img src="imgs/findlost.png"/></span>
+				        <div class="mui-media-body">我的失物</div>
+				    </a>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-4 mui-col-sm-4">
+				    <a id="a_mygoods">
+				        <span class="mui-icon"><img src="imgs/shop.png"/></span>
+				        <div class="mui-media-body">我的市场</div>
+				    </a>
+				</li>
+			</ul>
+			<div style="color: deepskyblue;padding-top:20px;">
+				<ul class="mui-table-view">
+					<li class="mui-table-view-cell">
+						<a class="mui-navigate-right" id="a_myrepair">
+							<span class="mui-icon mui-icon-person"></span>我的维修
+						</a>
+					</li>
+				</ul>
+			</div>
+			<ul class="mui-table-view mui-grid-view mui-grid-9" id="list2">
+				<li class="mui-table-view-cell mui-media mui-col-xs-3 mui-col-sm-3" id="0">
+				    <a id="a_mycount">
+				        <span class="mui-icon"><img src="imgs/state0.png"/><span class="mui-badge mui-badge-warning" id="state0">0</span></span>
+				        <div class="mui-media-body">未接受</div>
+				    </a>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-3 mui-col-sm-3" id="1">
+				    <a id="a_myupdate">
+				        <span class="mui-icon"><img src="imgs/state1.png"/><span class="mui-badge mui-badge-primary" id="state1">0</span></span>
+				        <div class="mui-media-body">待完工</div>
+				    </a>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-3 mui-col-sm-3" id="2">
+				    <a id="a_mycount">
+				        <span class="mui-icon"><img src="imgs/state2.png"/><span class="mui-badge mui-badge-success" id="state2">0</span></span>
+				        <div class="mui-media-body">已完工</div>
+				    </a>
+				</li>
+				<li class="mui-table-view-cell mui-media mui-col-xs-3 mui-col-sm-3" id="3">
+				    <a id="a_myupdate">
+				        <span class="mui-icon"><img src="imgs/state3.png"/><span class="mui-badge mui-badge-danger" id="state3">0</span></span>
+				        <div class="mui-media-body">疑难</div>
+				    </a>
+				</li>
+			</ul>
+		</div>
+		
+		<script src="js/mui.min.js"></script>
+		<script type="text/javascript">
+			mui.init();
+			mui.plusReady(function(){
+				//获取登录页面储存的url和登录信息
+				var request_url = localStorage.getItem("request_url");
+				var uid = localStorage.getItem('uidLogin'); 
+				mui.ajax(request_url+'user/findById',{
+					data:{
+						'uid':uid,
+					},
+					dataType:'json',
+					type:'post',
+					timeout:5000,			
+					success:function(data){ 
+						document.getElementById("showName").innerHTML=data.name; 
+						if(data.identity==2){
+							document.getElementById("showIdentiy").innerHTML="维修员";
+						}else{
+							document.getElementById("showIdentiy").innerHTML="普通用户";
+						}
+						if(data.img==null){
+							document.getElementById("userimg").src="imgs/userimg.png"
+						}else{
+							document.getElementById("userimg").src=request_url+data.img;
+						}
+					},
+					error:function(xhr,type,errorThrown){
+						mui.toast('网络连接失败...');
+					} 
+				});
+				mui.ajax(request_url+'repair/app/findCount',{
+					data:{
+						'uid':uid,
+					}, 
+					dataType:'json',  
+					type:'post',
+					timeout:5000,			 
+					success:function(data){ 
+						for(var i=0;i<data.length;i++){
+							if(data[i].state==0){
+								document.getElementById("state0").innerHTML=data[i].count;
+							}
+							if(data[i].state==1){
+								document.getElementById("state1").innerHTML=data[i].count;
+							}
+							if(data[i].state==2){
+								document.getElementById("state2").innerHTML=data[i].count;
+							}
+							if(data[i].state==3){
+								document.getElementById("state3").innerHTML=data[i].count;
+							}
+						}
+					}, 
+					error:function(xhr,type,errorThrown){
+						mui.toast('网络连接失败...');
+					}  
+				});
+			})
+			//子页面返回刷新
+			window.addEventListener('refresh', function(e){//执行刷新
+			    location.reload();
+			});
+			
+			mui("#list2").on('tap', 'li', function() {
+				var cid = this.getAttribute('id');
+				mui.openWindow({
+					url: 'myRepair.html',
+					id: 'myRepair', 
+					extras:{
+						'cid':cid,
+					},
+				});
+			});
+			document.getElementById("a_mycount").addEventListener('tap',function(){
+				mui.openWindow({
+					url:'myCountMessage.html',
+					id:'myCountMessage',
+				});
+			});
+			document.getElementById("a_myrepair").addEventListener('tap',function(){
+				mui.openWindow({
+					url:'myRepair.html',
+					id:'myRepair',
+				});
+			});
+			document.getElementById("a_mylost").addEventListener('tap',function(){
+				mui.openWindow({
+					url:'service/mylost.html',
+					id:'mylost',
+				});
+			});
+			document.getElementById("a_mygoods").addEventListener('tap',function(){
+				mui.openWindow({
+					url:'service/mygoods.html',
+					id:'mygoods',
+				});
+			});
+		</script>
+		
+	</body>
+
+</html>

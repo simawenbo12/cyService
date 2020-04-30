@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="css/main_css.css"/>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav header" >
+		    <a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+		    <h1 class="mui-title">关于我们</h1>
+		</header>
+		<div class="mui-content">
+			<div style="padding: 10px;padding-top: 30px;">
+				<p>作品名 : 城市学院移动后勤</p>
+				<p>版本号 : bv 1.0</p>
+				<p>作 &nbsp;&nbsp;者 ：司马文铂</p>
+				<p>学 &nbsp;&nbsp;校 ：东莞理工学院城市学院</p>
+				<p>邮 &nbsp;&nbsp;箱 ：493360134@qq.com</p>
+				<div style="padding-top: 300px; text-align: center;">
+					<p>(c) Copyright 2018 simaw</p>
+					<p> All Rights Reserved. </p>
+				</div>
+			</div>
+		</div>
+		<script src="js/mui.min.js"></script>
+		<script type="text/javascript">
+			mui.init({
+				beforeback: function() {
+			　　　　 //获得父页面的webview
+			console.log(1);
+			        var list = plus.webview.currentWebview().opener();
+			　　　　 //触发父页面的自定义事件(refresh),从而进行刷新
+			        mui.fire(list, 'refresh');
+			        //返回true,继续页面关闭逻辑
+			        return true;
+			    }
+			});
+			
+		</script>
+	</body>
+
+</html>

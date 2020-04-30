@@ -1,0 +1,33 @@
+/* 图文列表的样式   用于 二手市场 失物招领 城院通知 */
+.myli{
+	height: 110px;
+}
+.myli img{
+	height: 90px;
+	width: 30%;
+}
+.myli div{
+	padding-left:10px;
+	height: 90px;
+	width: 70%;	
+}
+.myli p{
+	position:absolute;
+	right:10px;
+	bottom:5px;
+}
+.myspan{
+	font-size: 13px;
+	color: gray;
+}
+#myp{
+	border: 1px;
+	border-color: ;
+}
+#btnDiv{
+	height: 40px;
+}
+button{
+	float: right;
+	margin-right: 10px;
+}

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smwb.dao.AreaDao">
+	
+	<resultMap type="Area" id="AreaResultMap">
+		<result column="a_id" property="aid"/>
+		<result column="area_item" property="areaItem"/>
+	</resultMap>
+
+	<select id="findAll" resultMap="AreaResultMap">
+		select a_id,area_item
+		from area
+	</select>
+	
+	<insert id="add">
+		insert into area
+		(area_item)
+		values
+		(#{areaItem})
+	</insert>
+	
+	<select id="findById" resultMap="AreaResultMap">
+		select a_id,area_item
+		from area
+		where a_id=#{aid}
+	</select>
+	
+	<update id="update">
+		update area
+		set area_item=#{areaItem}
+		where a_id=#{aid}
+	</update>
+	
+	<delete id="deleteById">
+		delete from area
+		where a_id=#{aid}
+	</delete>
+	
+</mapper>
