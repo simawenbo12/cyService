@@ -3,6 +3,8 @@
 #### 介绍
 大学时期老师给我做的项目，学校后勤管理中心。
 
+有 后勤保修 二手交易 失物招领 后勤通知 等功能。
+
 城市学院移动后勤   有APP端(webapp)和WEB端（PC）  
 
 后端使用技术    spring springmvc mybatis redis mysql quartz
